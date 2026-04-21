@@ -27,11 +27,18 @@ Para desbloquear la demo local sin credenciales reales de PocketBase:
 1. Ejecuta `npm run dev`.
 2. Abre `/login`.
 3. Haz clic en **Start local demo**.
-4. Navega a `/meetings`, `/review`, `/tasks`.
+4. En `/meetings` haz clic en **Load demo scenario**.
+5. Navega a `/review` para aprobar/rechazar candidatos.
+6. Navega a `/tasks` para operar tareas existentes y correr reminders simulados.
 
 **Limitación:** este bypass solo es para PoC local (demo/validación) y no representa el diseño final del MVP.
 
 **Reversión para MVP:** desactivar `POC_DEMO_AUTH_BYPASS` (o ejecutar en `NODE_ENV=production`) para volver al flujo real de autenticación con PocketBase.
+
+### Qué queda simulado en PoC demo
+- Ingesta Teams y flujo presencial sin Graph/PocketBase/faster-whisper/Ollama reales.
+- Cola de review y task lifecycle sobre almacenamiento en memoria local (se reinicia al reiniciar `npm run dev`).
+- Notificaciones y reminders como ejecución simulada.
 
 ## Run
 1. `npm install`

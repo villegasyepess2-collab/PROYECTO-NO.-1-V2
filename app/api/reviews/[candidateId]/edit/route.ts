@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { isDemoLocalMode } from "@/lib/demo/local-store";
 import { editCandidate } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
@@ -10,6 +11,10 @@ export async function POST(request: Request, { params }: { params: { candidateId
 
   if (!payload.patch || typeof payload.patch !== "object") {
     return NextResponse.json({ error: "patch is required" }, { status: 400 });
+  }
+
+  if (isDemoLocalMode()) {
+    return NextResponse.json({ message: "Candidate updated (demo mode simulated)", id: params.candidateId });
   }
 
   try {

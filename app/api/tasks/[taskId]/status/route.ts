@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
+import { ensureDemoScenario, isDemoLocalMode, updateDemoTaskStatus } from "@/lib/demo/local-store";
+import type { TaskLifecycleStatus } from "@/lib/domain/entities";
 
 const allowed = ["pending", "in_progress", "blocked", "overdue", "completed"];
 
@@ -12,6 +14,19 @@ export async function POST(request: Request, { params }: { params: { taskId: str
 
   if (!payload.status || !allowed.includes(payload.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  if (isDemoLocalMode()) {
+    ensureDemoScenario();
+    try {
+      const updated = updateDemoTaskStatus(params.taskId, payload.status as TaskLifecycleStatus);
+      return NextResponse.json({ message: "Status updated (demo mode)", id: updated.id, status: updated.status });
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Status update failed", detail: error instanceof Error ? error.message : "Unknown error" },
+        { status: 404 }
+      );
+    }
   }
 
   try {

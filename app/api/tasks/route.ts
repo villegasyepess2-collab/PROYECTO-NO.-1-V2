@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
-import { ensureDemoScenario, getDemoReviewItems, isDemoLocalMode } from "@/lib/demo/local-store";
+import { ensureDemoScenario, getDemoTasks, isDemoLocalMode } from "@/lib/demo/local-store";
 
 export async function GET() {
   const session = await getSession();
@@ -9,7 +9,7 @@ export async function GET() {
 
   if (isDemoLocalMode()) {
     ensureDemoScenario();
-    return NextResponse.json({ items: getDemoReviewItems() });
+    return NextResponse.json({ items: getDemoTasks() });
   }
 
   try {
@@ -17,15 +17,11 @@ export async function GET() {
     const serviceToken = process.env.POCKETBASE_SERVICE_TOKEN;
     if (serviceToken) pb.authStore.save(serviceToken, null);
 
-    const list = await pb.collection("task_candidates").getList(1, 50, {
-      filter: 'status = "requires_review"',
-      sort: "-created"
-    });
-
+    const list = await pb.collection("tasks").getList(1, 100, { sort: "due_date" });
     return NextResponse.json({ items: list.items });
   } catch (error) {
     return NextResponse.json(
-      { error: "Unable to load review queue", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Unable to load tasks", detail: error instanceof Error ? error.message : "Unknown error" },
       { status: 502 }
     );
   }

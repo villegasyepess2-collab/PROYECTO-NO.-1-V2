@@ -14,7 +14,29 @@ interface TeamsIngestionResult {
 export default function MeetingsPage() {
   const [teamsResult, setTeamsResult] = useState<TeamsIngestionResult | null>(null);
   const [teamsError, setTeamsError] = useState<string | null>(null);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [seedPending, setSeedPending] = useState(false);
+
+  const loadDemoScenario = async () => {
+    setSeedPending(true);
+    setTeamsError(null);
+    setSeedMessage(null);
+
+    const response = await fetch("/api/demo/seed", { method: "POST" });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      setTeamsError(payload.detail ?? payload.error ?? "Unable to load demo scenario");
+      setSeedPending(false);
+      return;
+    }
+
+    setSeedMessage(
+      `Demo loaded: meetings ${payload.meetings}, review candidates ${payload.candidatesInReview}, tasks ${payload.tasks}`
+    );
+    setSeedPending(false);
+  };
 
   const onTeamsSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,15 +74,20 @@ export default function MeetingsPage() {
     <section>
       <div className="card">
         <h3>Teams Transcript Ingestion (Phase 3)</h3>
+        <p>PoC demo mode: seed local data to show end-to-end flow without external services.</p>
+        <button onClick={loadDemoScenario} disabled={seedPending}>
+          {seedPending ? "Loading demo..." : "Load demo scenario"}
+        </button>
+        {seedMessage ? <p style={{ color: "#065f46" }}>{seedMessage}</p> : null}
         <form onSubmit={onTeamsSubmit} style={{ display: "grid", gap: 8, marginTop: 12 }}>
           <label htmlFor="meetingExternalId">Meeting external ID</label>
-          <input id="meetingExternalId" name="meetingExternalId" required />
+          <input id="meetingExternalId" name="meetingExternalId" defaultValue="demo-meeting-external-001" required />
 
           <label htmlFor="organizerAadUserId">Organizer AAD user ID</label>
-          <input id="organizerAadUserId" name="organizerAadUserId" required />
+          <input id="organizerAadUserId" name="organizerAadUserId" defaultValue="demo-organizer-aad-001" required />
 
           <label htmlFor="transcriptExternalId">Transcript external ID</label>
-          <input id="transcriptExternalId" name="transcriptExternalId" required />
+          <input id="transcriptExternalId" name="transcriptExternalId" defaultValue="demo-transcript-ext-001" required />
 
           <label htmlFor="meetingTitle">Meeting title (optional)</label>
           <input id="meetingTitle" name="meetingTitle" />

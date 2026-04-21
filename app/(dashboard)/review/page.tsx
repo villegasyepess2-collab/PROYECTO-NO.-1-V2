@@ -17,6 +17,23 @@ export default function ReviewQueuePage() {
   const [items, setItems] = useState<ReviewItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [seedPending, setSeedPending] = useState(false);
+
+  const loadDemo = async () => {
+    setSeedPending(true);
+    setError(null);
+    const response = await fetch("/api/demo/seed", { method: "POST" });
+    const payload = await response.json();
+    if (!response.ok) {
+      setError(payload.detail ?? payload.error ?? "Unable to load demo");
+      setSeedPending(false);
+      return;
+    }
+
+    setMessage("Demo scenario loaded.");
+    await load();
+    setSeedPending(false);
+  };
 
   const load = async () => {
     const response = await fetch("/api/reviews");
@@ -79,6 +96,9 @@ export default function ReviewQueuePage() {
   return (
     <div className="card">
       <h3>Manual Review Queue</h3>
+      <button onClick={loadDemo} disabled={seedPending} style={{ marginBottom: 10 }}>
+        {seedPending ? "Loading demo..." : "Load demo scenario"}
+      </button>
       {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}
       {message ? <p style={{ color: "#065f46" }}>{message}</p> : null}
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
+import { ensureDemoScenario, isDemoLocalMode } from "@/lib/demo/local-store";
 import { ingestTeamsTranscript } from "@/lib/services/teams-ingestion";
 import type { TeamsIngestionRequest } from "@/lib/teams/types";
 
@@ -10,6 +11,19 @@ export async function POST(request: Request) {
   }
 
   const payload = (await request.json()) as TeamsIngestionRequest;
+
+  if (isDemoLocalMode()) {
+    const summary = ensureDemoScenario();
+    return NextResponse.json({
+      message: "Teams transcript ingested (demo mode simulated)",
+      actorUserId: session.userId,
+      meetingSourceId: "demo_source_teams",
+      meetingId: "demo_seeded_meeting",
+      transcriptId: "demo_seeded_transcript",
+      normalizedLength: 132,
+      summary
+    });
+  }
 
   if (!payload.meetingExternalId || !payload.organizerAadUserId || !payload.transcriptExternalId) {
     return NextResponse.json(

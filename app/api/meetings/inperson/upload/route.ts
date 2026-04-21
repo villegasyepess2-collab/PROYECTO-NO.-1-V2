@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
+import { addDemoInpersonMeeting, ensureDemoScenario, isDemoLocalMode } from "@/lib/demo/local-store";
 import { storeUploadedRecording } from "@/lib/recording/storage";
 import { transcribeAudioWithFasterWhisper } from "@/lib/recording/transcription";
 import { runExtractionPipeline } from "@/lib/services/extraction-pipeline";
@@ -12,6 +13,22 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const file = form.get("audio");
   const meetingTitle = String(form.get("meetingTitle") ?? "In-person meeting");
+
+  if (isDemoLocalMode()) {
+    ensureDemoScenario();
+    const simulated = addDemoInpersonMeeting(meetingTitle);
+    return NextResponse.json({
+      message: "Recording processed (demo mode simulated)",
+      meetingId: simulated.meetingId,
+      transcriptId: simulated.transcriptId,
+      extraction: {
+        created: 1,
+        requiresReview: 1,
+        autoApproved: 0,
+        candidateIds: [simulated.candidateId]
+      }
+    });
+  }
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "audio file is required" }, { status: 400 });
