@@ -3,13 +3,22 @@
 Internal web app for meeting task extraction and follow-up.
 
 ## Current status
-- ✅ Phase 1-5 complete.
-- ✅ Phase 6 complete: manual review queue with approve/edit/reject actions.
-- ✅ Phase 7 complete: final task creation and Graph `chatMessage` notifications.
-- ✅ Phase 8 complete: task status flow, reminder scheduler, overdue logic, delivery attempts, audit/status history hooks.
+- ✅ Fase 1: documentación + estructura base alineadas.
+- ✅ Fase 2: Teams transcript demo local desde `/meetings` (PoC, sin servicios externos).
+- ⏳ Fase 3+ quedan en avance controlado por orden oficial.
+
+## Official build order (strict)
+1. documentación y estructura base app
+2. Teams transcript
+3. grabación presencial
+4. extracción IA
+5. validación
+6. Graph chatMessage
+7. recordatorios y pruebas
 
 ## Key APIs
 - Auth: `POST /api/auth/login`, `POST /api/auth/logout`
+- Demo (Phase 2): `POST /api/demo/seed-teams`
 - Ingestion: `POST /api/meetings/teams/ingest`, `POST /api/meetings/inperson/upload`
 - Extraction: `POST /api/extraction/run`
 - Review: `GET /api/reviews`, `POST /api/reviews/{candidateId}/approve|edit|reject`
@@ -27,9 +36,8 @@ Para desbloquear la demo local sin credenciales reales de PocketBase:
 1. Ejecuta `npm run dev`.
 2. Abre `/login`.
 3. Haz clic en **Start local demo**.
-4. En `/meetings` haz clic en **Load demo scenario**.
-5. Navega a `/review` para aprobar/rechazar candidatos.
-6. Navega a `/tasks` para operar tareas existentes y correr reminders simulados.
+4. En `/meetings` haz clic en **Load Teams demo transcript**.
+5. Verifica IDs de `meetingId` y `transcriptId` creados (quedan listos para fase de extracción).
 
 **Limitación:** este bypass solo es para PoC local (demo/validación) y no representa el diseño final del MVP.
 

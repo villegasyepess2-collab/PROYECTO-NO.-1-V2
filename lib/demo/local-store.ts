@@ -13,6 +13,7 @@ interface DemoTranscript {
   id: string;
   meeting_id: string;
   source_kind: "teams_internal" | "in_person_recording";
+  external_id?: string;
   normalized_text: string;
   created: string;
 }
@@ -174,6 +175,52 @@ export function ensureDemoScenario() {
     meetings: state.meetings.length,
     candidatesInReview: state.candidates.filter((c) => c.status === "requires_review").length,
     tasks: state.tasks.length
+  };
+}
+
+export function seedTeamsTranscriptDemo(params?: {
+  meetingTitle?: string;
+  transcriptText?: string;
+  organizerUserId?: string;
+  meetingExternalId?: string;
+  transcriptExternalId?: string;
+}) {
+  const now = new Date().toISOString();
+  const meetingId = mkId("meeting");
+  const transcriptId = mkId("transcript");
+
+  const meetingExternalId = params?.meetingExternalId ?? `teams_demo_${Date.now()}`;
+  const transcriptExternalId = params?.transcriptExternalId ?? `transcript_demo_${Date.now()}`;
+
+  state.meetings.push({
+    id: meetingId,
+    title: params?.meetingTitle ?? "Teams Demo Transcript Meeting",
+    source_kind: "teams_internal",
+    organizer_user_id: params?.organizerUserId ?? "demo.teams.organizer",
+    created: now
+  });
+
+  const transcriptText =
+    params?.transcriptText ??
+    "I request that Ana prepare the sprint summary by next Tuesday. Please take care of sharing it with operations.";
+
+  state.transcripts.push({
+    id: transcriptId,
+    meeting_id: meetingId,
+    source_kind: "teams_internal",
+    external_id: transcriptExternalId,
+    normalized_text: transcriptText,
+    created: now
+  });
+
+  state.seeded = true;
+
+  return {
+    meetingId,
+    transcriptId,
+    meetingExternalId,
+    transcriptExternalId,
+    transcriptLength: transcriptText.length
   };
 }
 

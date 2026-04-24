@@ -11,30 +11,46 @@ interface TeamsIngestionResult {
   normalizedLength: number;
 }
 
+interface TeamsDemoSeedResult {
+  message: string;
+  sourceKind: "teams_internal";
+  meetingId: string;
+  transcriptId: string;
+  meetingExternalId: string;
+  transcriptExternalId: string;
+  transcriptLength: number;
+}
+
 export default function MeetingsPage() {
   const [teamsResult, setTeamsResult] = useState<TeamsIngestionResult | null>(null);
+  const [teamsDemoResult, setTeamsDemoResult] = useState<TeamsDemoSeedResult | null>(null);
   const [teamsError, setTeamsError] = useState<string | null>(null);
-  const [seedMessage, setSeedMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [seedPending, setSeedPending] = useState(false);
 
-  const loadDemoScenario = async () => {
+  const loadTeamsDemoTranscript = async () => {
     setSeedPending(true);
     setTeamsError(null);
-    setSeedMessage(null);
+    setTeamsDemoResult(null);
 
-    const response = await fetch("/api/demo/seed", { method: "POST" });
+    const response = await fetch("/api/demo/seed-teams", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        meetingTitle: "Teams Weekly Operations Demo",
+        transcriptText:
+          "I ask Ana to finalize the weekly report by next Tuesday, and please take care of confirming the blockers list."
+      })
+    });
     const payload = await response.json();
 
     if (!response.ok) {
-      setTeamsError(payload.detail ?? payload.error ?? "Unable to load demo scenario");
+      setTeamsError(payload.detail ?? payload.error ?? "Unable to load Teams demo transcript");
       setSeedPending(false);
       return;
     }
 
-    setSeedMessage(
-      `Demo loaded: meetings ${payload.meetings}, review candidates ${payload.candidatesInReview}, tasks ${payload.tasks}`
-    );
+    setTeamsDemoResult(payload);
     setSeedPending(false);
   };
 
@@ -73,12 +89,23 @@ export default function MeetingsPage() {
   return (
     <section>
       <div className="card">
-        <h3>Teams Transcript Ingestion (Phase 3)</h3>
-        <p>PoC demo mode: seed local data to show end-to-end flow without external services.</p>
-        <button onClick={loadDemoScenario} disabled={seedPending}>
-          {seedPending ? "Loading demo..." : "Load demo scenario"}
+        <h3>Teams Transcript Demo (Fase 2)</h3>
+        <p>Primero carga un transcript Teams demo local (sin Teams real, sin Graph, sin IDs reales).</p>
+        <button onClick={loadTeamsDemoTranscript} disabled={seedPending}>
+          {seedPending ? "Loading Teams demo..." : "Load Teams demo transcript"}
         </button>
-        {seedMessage ? <p style={{ color: "#065f46" }}>{seedMessage}</p> : null}
+        {teamsDemoResult ? (
+          <ul>
+            <li>Source kind: <span className="code">{teamsDemoResult.sourceKind}</span></li>
+            <li>Meeting: <span className="code">{teamsDemoResult.meetingId}</span></li>
+            <li>Transcript: <span className="code">{teamsDemoResult.transcriptId}</span></li>
+            <li>Meeting external: <span className="code">{teamsDemoResult.meetingExternalId}</span></li>
+            <li>Transcript external: <span className="code">{teamsDemoResult.transcriptExternalId}</span></li>
+            <li>Transcript length: {teamsDemoResult.transcriptLength}</li>
+          </ul>
+        ) : null}
+
+        <h4 style={{ marginTop: 16 }}>Advanced: manual Teams ingestion payload</h4>
         <form onSubmit={onTeamsSubmit} style={{ display: "grid", gap: 8, marginTop: 12 }}>
           <label htmlFor="meetingExternalId">Meeting external ID</label>
           <input id="meetingExternalId" name="meetingExternalId" defaultValue="demo-meeting-external-001" required />

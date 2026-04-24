@@ -1,12 +1,15 @@
 # Implementation Plan
 
-## Delivery Status
-- ✅ Phase 0-5 completed.
-- ✅ Phase 6: manual review actions (approve/edit/reject).
-- ✅ Phase 7: final task creation + Graph `chatMessage` notifications + delivery attempts.
-- ✅ Phase 8: reminder scheduler, overdue marking, task status flow, and audit/status history integration.
+## Official phase order
+1. Documentation + base app structure
+2. Teams transcript
+3. In-person recording
+4. AI extraction
+5. Validation workflow
+6. Graph `chatMessage`
+7. Reminders + tests
 
-## Remaining hardening
-- Add end-to-end integration tests with PocketBase + Graph/Ollama test doubles.
-- Add richer role-based access checks per route.
-- Add operational dashboards for failed notification attempts.
+## Current checkpoint
+- ✅ Phase 1 closed: structure/docs aligned with ordered execution.
+- ✅ Phase 2 closed (PoC local): `Load Teams demo transcript` creates local meeting + transcript without external dependencies.
+- ⏳ Phase 3 pending: local in-person demo flow refinement.

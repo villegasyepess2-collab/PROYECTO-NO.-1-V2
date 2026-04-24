@@ -1,5 +1,9 @@
 # Backlog
 
+## Execution guard (must respect order)
+- Do not start a phase until the previous one is functionally closed in PoC local mode.
+- Current active target: Phase 2 (Teams transcript local demo), then Phase 3.
+
 ## Epic 1: Foundation
 - Story: As an admin, I can log in and access dashboard/navigation.
 - Story: As a developer, I can run APIs for ingestion, extraction, review, tasks, notifications.

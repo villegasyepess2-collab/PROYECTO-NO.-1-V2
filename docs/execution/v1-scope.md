@@ -21,3 +21,9 @@
 - Mandatory docs complete and aligned.
 - Core endpoints and UI pages available.
 - Basic tests for critical domain rules exist.
+
+## Phase ownership map (order-driven)
+- Phase 1: docs + app structure alignment.
+- Phase 2: Teams transcript ingestion (including PoC local demo transcript seed).
+- Phase 3: in-person meeting capture/post-processing (PoC local mode acceptable).
+- Phase 4-7: extraction, validation, notifications, reminders/tests in sequence.
