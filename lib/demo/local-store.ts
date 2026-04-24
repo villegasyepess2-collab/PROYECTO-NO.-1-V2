@@ -307,16 +307,19 @@ export function runDemoReminders() {
   return { remindersSent, overdueMarked, scanned: state.tasks.length };
 }
 
-export function addDemoInpersonMeeting(meetingTitle: string) {
+export function addDemoInpersonMeeting(params?: { meetingTitle?: string; transcriptText?: string; organizerUserId?: string }) {
   const now = new Date().toISOString();
   const meetingId = mkId("meeting");
   const transcriptId = mkId("transcript");
+  const transcriptText =
+    params?.transcriptText ??
+    "In today's in-person follow-up, Maria asked Diego to deliver the pilot rollout checklist by next Thursday and confirm open blockers.";
 
   state.meetings.push({
     id: meetingId,
-    title: meetingTitle,
+    title: params?.meetingTitle ?? "In-person demo meeting",
     source_kind: "in_person_recording",
-    organizer_user_id: "demo.local.user",
+    organizer_user_id: params?.organizerUserId ?? "demo.local.user",
     created: now
   });
 
@@ -324,7 +327,7 @@ export function addDemoInpersonMeeting(meetingTitle: string) {
     id: transcriptId,
     meeting_id: meetingId,
     source_kind: "in_person_recording",
-    normalized_text: "You need to deliver the prototype notes by Monday.",
+    normalized_text: transcriptText,
     created: now
   });
 
@@ -334,7 +337,7 @@ export function addDemoInpersonMeeting(meetingTitle: string) {
     transcript_id: transcriptId,
     title: "Deliver prototype notes",
     description: "Share prototype notes from in-person discussion.",
-    source_excerpt: "You need to deliver the prototype notes by Monday.",
+    source_excerpt: transcriptText,
     proposed_responsible_user_id: "dev.owner",
     proposed_requester_user_id: "demo.local.user",
     due_date: daysFromToday(3),
@@ -347,5 +350,11 @@ export function addDemoInpersonMeeting(meetingTitle: string) {
 
   state.candidates.push(candidate);
 
-  return { meetingId, transcriptId, candidateId: candidate.id };
+  return {
+    sourceKind: "in_person_recording" as const,
+    meetingId,
+    transcriptId,
+    transcriptLength: transcriptText.length,
+    candidateId: candidate.id
+  };
 }

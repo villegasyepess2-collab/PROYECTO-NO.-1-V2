@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
-import { addDemoInpersonMeeting, ensureDemoScenario, isDemoLocalMode } from "@/lib/demo/local-store";
+import { addDemoInpersonMeeting, isDemoLocalMode } from "@/lib/demo/local-store";
 import { storeUploadedRecording } from "@/lib/recording/storage";
 import { transcribeAudioWithFasterWhisper } from "@/lib/recording/transcription";
-import { runExtractionPipeline } from "@/lib/services/extraction-pipeline";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -15,18 +14,16 @@ export async function POST(request: Request) {
   const meetingTitle = String(form.get("meetingTitle") ?? "In-person meeting");
 
   if (isDemoLocalMode()) {
-    ensureDemoScenario();
-    const simulated = addDemoInpersonMeeting(meetingTitle);
+    const simulated = addDemoInpersonMeeting({
+      meetingTitle,
+      organizerUserId: session.userId
+    });
     return NextResponse.json({
       message: "Recording processed (demo mode simulated)",
+      sourceKind: simulated.sourceKind,
       meetingId: simulated.meetingId,
       transcriptId: simulated.transcriptId,
-      extraction: {
-        created: 1,
-        requiresReview: 1,
-        autoApproved: 0,
-        candidateIds: [simulated.candidateId]
-      }
+      transcriptLength: simulated.transcriptLength
     });
   }
 
@@ -76,17 +73,12 @@ export async function POST(request: Request) {
       source_kind: "in_person_recording"
     });
 
-    const extraction = await runExtractionPipeline({
-      meetingId: meeting.id,
-      transcriptId: transcript.id,
-      transcriptText: transcription.text
-    });
-
     return NextResponse.json({
-      message: "Recording uploaded, transcribed, and extracted",
+      message: "Recording uploaded and transcribed",
+      sourceKind: "in_person_recording",
       meetingId: meeting.id,
       transcriptId: transcript.id,
-      extraction
+      transcriptLength: transcription.text.length
     });
   } catch (error) {
     return NextResponse.json(

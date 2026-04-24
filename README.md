@@ -5,7 +5,8 @@ Internal web app for meeting task extraction and follow-up.
 ## Current status
 - ✅ Fase 1: documentación + estructura base alineadas.
 - ✅ Fase 2: Teams transcript demo local desde `/meetings` (PoC, sin servicios externos).
-- ⏳ Fase 3+ quedan en avance controlado por orden oficial.
+- ✅ Fase 3: grabación presencial demo local desde `/meetings` (PoC, sin micrófono obligatorio).
+- ⏳ Fase 4+ quedan en avance controlado por orden oficial.
 
 ## Official build order (strict)
 1. documentación y estructura base app
@@ -19,6 +20,7 @@ Internal web app for meeting task extraction and follow-up.
 ## Key APIs
 - Auth: `POST /api/auth/login`, `POST /api/auth/logout`
 - Demo (Phase 2): `POST /api/demo/seed-teams`
+- Demo (Phase 3): `POST /api/demo/seed-inperson`
 - Ingestion: `POST /api/meetings/teams/ingest`, `POST /api/meetings/inperson/upload`
 - Extraction: `POST /api/extraction/run`
 - Review: `GET /api/reviews`, `POST /api/reviews/{candidateId}/approve|edit|reject`
@@ -37,7 +39,8 @@ Para desbloquear la demo local sin credenciales reales de PocketBase:
 2. Abre `/login`.
 3. Haz clic en **Start local demo**.
 4. En `/meetings` haz clic en **Load Teams demo transcript**.
-5. Verifica IDs de `meetingId` y `transcriptId` creados (quedan listos para fase de extracción).
+5. En el bloque **In-person Recording Flow**, haz clic en **Load in-person demo recording**.
+6. Verifica IDs de `meetingId` y `transcriptId` creados (quedan listos para fase de extracción).
 
 **Limitación:** este bypass solo es para PoC local (demo/validación) y no representa el diseño final del MVP.
 

@@ -12,7 +12,7 @@ Build a low-cost internal platform to ingest meeting transcripts, extract struct
   5) validation,
   6) Graph `chatMessage`,
   7) reminders/tests.
-- For current iteration, close Phase 1 and Phase 2 before advancing.
+- For current iteration, close Phase 3 before advancing to Phase 4.
 
 ## Guardrails
 - Task creation must require responsible, due date, and source excerpt.
