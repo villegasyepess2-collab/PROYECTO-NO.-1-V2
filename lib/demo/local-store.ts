@@ -76,6 +76,66 @@ function daysFromToday(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+function inferDueDate(sentence: string): string | undefined {
+  const lower = sentence.toLowerCase();
+  if (lower.includes("today")) return daysFromToday(0);
+  if (lower.includes("tomorrow")) return daysFromToday(1);
+  if (lower.includes("next week")) return daysFromToday(7);
+  if (lower.includes("friday")) return daysFromToday(4);
+  if (lower.includes("monday")) return daysFromToday(3);
+  return undefined;
+}
+
+function inferResponsible(sentence: string): string | undefined {
+  const match = sentence.match(/\b(?:ask(?:ed)?|request(?:ed)?|need)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)\b/u);
+  if (!match) return undefined;
+  return `${match[1].toLowerCase()}.demo`;
+}
+
+function buildDemoCandidates(params: {
+  meetingId: string;
+  transcriptId: string;
+  transcriptText: string;
+  requesterUserId: string;
+}) {
+  const sentences = params.transcriptText
+    .split(/[.!?\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((sentence) =>
+      /\b(i ask|i request|i need you to|please take care of|you are responsible for|you need to|asked)\b/i.test(
+        sentence
+      )
+    );
+
+  const now = new Date().toISOString();
+
+  return sentences.map((sentence, index) => {
+    const dueDate = inferDueDate(sentence);
+    const responsible = inferResponsible(sentence);
+    const needsReview = !responsible || !dueDate;
+
+    const candidate: DemoCandidate = {
+      id: mkId("candidate"),
+      meeting_id: params.meetingId,
+      transcript_id: params.transcriptId,
+      title: sentence.slice(0, 72),
+      description: sentence,
+      source_excerpt: sentence,
+      proposed_responsible_user_id: responsible,
+      proposed_requester_user_id: params.requesterUserId,
+      due_date: dueDate,
+      confidence_score: needsReview ? 0.59 : 0.78,
+      validation_required: needsReview,
+      status: "requires_review",
+      ambiguity_reasons: needsReview ? ["missing_responsible_or_due_date"] : ["manual_review_required_poc"],
+      created: new Date(new Date(now).getTime() + index).toISOString()
+    };
+
+    return candidate;
+  });
+}
+
 export function isDemoLocalMode() {
   return isLocalPocAuthBypassEnabled();
 }
@@ -213,6 +273,14 @@ export function seedTeamsTranscriptDemo(params?: {
     created: now
   });
 
+  const generated = buildDemoCandidates({
+    meetingId,
+    transcriptId,
+    transcriptText,
+    requesterUserId: params?.organizerUserId ?? "demo.teams.organizer"
+  });
+  state.candidates.push(...generated);
+
   state.seeded = true;
 
   return {
@@ -331,30 +399,19 @@ export function addDemoInpersonMeeting(params?: { meetingTitle?: string; transcr
     created: now
   });
 
-  const candidate = {
-    id: mkId("candidate"),
-    meeting_id: meetingId,
-    transcript_id: transcriptId,
-    title: "Deliver prototype notes",
-    description: "Share prototype notes from in-person discussion.",
-    source_excerpt: transcriptText,
-    proposed_responsible_user_id: "dev.owner",
-    proposed_requester_user_id: "demo.local.user",
-    due_date: daysFromToday(3),
-    confidence_score: 0.62,
-    validation_required: true,
-    status: "requires_review" as const,
-    ambiguity_reasons: ["due_date_relative_expression"],
-    created: now
-  };
-
-  state.candidates.push(candidate);
+  const generated = buildDemoCandidates({
+    meetingId,
+    transcriptId,
+    transcriptText,
+    requesterUserId: params?.organizerUserId ?? "demo.local.user"
+  });
+  state.candidates.push(...generated);
 
   return {
     sourceKind: "in_person_recording" as const,
     meetingId,
     transcriptId,
     transcriptLength: transcriptText.length,
-    candidateId: candidate.id
+    candidateId: generated[0]?.id
   };
 }

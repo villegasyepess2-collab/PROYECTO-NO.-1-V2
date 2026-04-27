@@ -6,7 +6,8 @@ Internal web app for meeting task extraction and follow-up.
 - ✅ Fase 1: documentación + estructura base alineadas.
 - ✅ Fase 2: Teams transcript demo local desde `/meetings` (PoC, sin servicios externos).
 - ✅ Fase 3: grabación presencial demo local desde `/meetings` (PoC, sin micrófono obligatorio).
-- ⏳ Fase 4+ quedan en avance controlado por orden oficial.
+- ✅ Fase 4: extracción mock/determinista en modo demo y candidatos visibles en `/review`.
+- ⏳ Fase 5+ quedan en avance controlado por orden oficial.
 
 ## Official build order (strict)
 1. documentación y estructura base app
@@ -21,6 +22,7 @@ Internal web app for meeting task extraction and follow-up.
 - Auth: `POST /api/auth/login`, `POST /api/auth/logout`
 - Demo (Phase 2): `POST /api/demo/seed-teams`
 - Demo (Phase 3): `POST /api/demo/seed-inperson`
+- Review read: `GET /api/reviews` (lista candidatos demo de extracción)
 - Ingestion: `POST /api/meetings/teams/ingest`, `POST /api/meetings/inperson/upload`
 - Extraction: `POST /api/extraction/run`
 - Review: `GET /api/reviews`, `POST /api/reviews/{candidateId}/approve|edit|reject`
