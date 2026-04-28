@@ -10,6 +10,9 @@ interface TaskItem {
   responsible_user_id: string;
   requester_user_id?: string;
   source_excerpt?: string;
+  notification_status?: "not_triggered" | "mock_sent" | "sent" | "failed";
+  notification_attempt_count?: number;
+  notification_preview?: string | null;
 }
 
 export default function TasksPage() {
@@ -85,6 +88,12 @@ export default function TasksPage() {
                 </span>
               </label>
               {task.source_excerpt ? <div><small>Evidence: {task.source_excerpt}</small></div> : null}
+              <div>
+                <small>
+                  Notification: {task.notification_status ?? "not_triggered"} · attempts: {task.notification_attempt_count ?? 0}
+                </small>
+              </div>
+              {task.notification_preview ? <div><small>Message: {task.notification_preview}</small></div> : null}
             </li>
           ))}
         </ul>

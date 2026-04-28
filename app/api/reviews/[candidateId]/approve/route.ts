@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { approveDemoCandidate, isDemoLocalMode } from "@/lib/demo/local-store";
+import { createAndSendTaskCreatedNotifications } from "@/lib/services/notifications";
 import { approveCandidateAndCreateTask } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
@@ -32,11 +33,20 @@ export async function POST(request: Request, { params }: { params: { candidateId
         reviewerId: session.userId
       });
 
+      const notifications = await createAndSendTaskCreatedNotifications({
+        taskId: task.id,
+        responsibleUserId: task.responsible_user_id,
+        requesterUserId: task.requester_user_id,
+        taskTitle: task.title,
+        dueDate: task.due_date,
+        sourceExcerpt: task.source_excerpt
+      });
+
       return NextResponse.json({
         message: "Candidate approved and task created (demo mode)",
         taskId: task.id,
         reviewId: `demo_review_${params.candidateId}`,
-        notifications: { sent: false, reason: "demo_mode_simulated" }
+        notifications
       });
     } catch (error) {
       return NextResponse.json(

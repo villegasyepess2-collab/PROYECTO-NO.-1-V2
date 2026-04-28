@@ -1,4 +1,5 @@
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
+import { isDemoLocalMode, recordDemoNotificationAttempt } from "@/lib/demo/local-store";
 import { sendTeamsChatMessage } from "@/lib/teams/chat-message";
 
 async function resolveUserForNotification(pb: ReturnType<typeof createPocketBaseClient>, userId: string) {
@@ -27,6 +28,10 @@ export async function createAndSendTaskCreatedNotifications(params: {
   taskTitle: string;
   dueDate: string;
 }) {
+  if (isDemoLocalMode()) {
+    return createAndSendTaskCreatedNotificationsDemo(params);
+  }
+
   const pb = createPocketBaseClient();
   const serviceToken = process.env.POCKETBASE_SERVICE_TOKEN;
   if (serviceToken) pb.authStore.save(serviceToken, null);
@@ -80,6 +85,53 @@ export async function createAndSendTaskCreatedNotifications(params: {
   }
 
   return { sentCount: sent.length };
+}
+
+function buildTaskCreatedNotificationContent(params: {
+  taskId: string;
+  taskTitle: string;
+  dueDate: string;
+  responsibleUserId: string;
+  requesterUserId: string;
+  sourceExcerpt?: string;
+}) {
+  const preview = `Task "${params.taskTitle}" assigned to ${params.responsibleUserId} (due ${params.dueDate})`;
+  const htmlBody = [
+    `<p><b>Task assigned</b></p>`,
+    `<p>Task: <b>${params.taskTitle}</b></p>`,
+    `<p>Responsible: ${params.responsibleUserId}</p>`,
+    `<p>Requester: ${params.requesterUserId}</p>`,
+    `<p>Due date: ${params.dueDate}</p>`,
+    `<p>Task ID: ${params.taskId}</p>`,
+    `<p>Evidence: ${params.sourceExcerpt ?? "N/A"}</p>`
+  ].join("");
+
+  return { preview, htmlBody };
+}
+
+async function createAndSendTaskCreatedNotificationsDemo(params: {
+  taskId: string;
+  responsibleUserId: string;
+  requesterUserId: string;
+  taskTitle: string;
+  dueDate: string;
+  sourceExcerpt?: string;
+}) {
+  const recipients = [params.responsibleUserId, params.requesterUserId];
+  const content = buildTaskCreatedNotificationContent(params);
+
+  for (const recipient of recipients) {
+    recordDemoNotificationAttempt({
+      taskId: params.taskId,
+      recipientUserId: recipient,
+      messagePreview: content.preview,
+      messagePayload: content.htmlBody,
+      status: "mock_sent",
+      idempotencyKey: `${params.taskId}:task_created:${recipient}`
+    });
+  }
+
+  return { sentCount: recipients.length, mode: "mock_sent" as const, preview: content.preview };
 }
 
 export async function sendReminderNotification(params: {

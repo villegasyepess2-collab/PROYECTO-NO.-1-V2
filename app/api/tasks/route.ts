@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { createPocketBaseClient } from "@/lib/db/pocketbase";
-import { getDemoTasks, isDemoLocalMode } from "@/lib/demo/local-store";
+import { getDemoTasksWithNotifications, isDemoLocalMode } from "@/lib/demo/local-store";
 
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (isDemoLocalMode()) {
-    return NextResponse.json({ items: getDemoTasks() });
+    return NextResponse.json({ items: getDemoTasksWithNotifications() });
   }
 
   try {

@@ -64,6 +64,18 @@ interface DemoState {
     note?: string;
     created: string;
   }>;
+  notification_attempts: Array<{
+    id: string;
+    task_id: string;
+    recipient_user_id: string;
+    channel: "graph_chatmessage";
+    status: "mock_sent" | "sent" | "failed";
+    idempotency_key: string;
+    message_preview: string;
+    message_payload: string;
+    error?: string;
+    created: string;
+  }>;
 }
 
 const state: DemoState = {
@@ -72,7 +84,8 @@ const state: DemoState = {
   transcripts: [],
   candidates: [],
   tasks: [],
-  reviews: []
+  reviews: [],
+  notification_attempts: []
 };
 
 function mkId(prefix: string) {
@@ -155,6 +168,7 @@ export function seedDemoScenario() {
   state.candidates = [];
   state.tasks = [];
   state.reviews = [];
+  state.notification_attempts = [];
 
   const now = new Date().toISOString();
 
@@ -312,6 +326,54 @@ export function getDemoReviewItems() {
 
 export function getDemoTasks() {
   return [...state.tasks].sort((a, b) => a.due_date.localeCompare(b.due_date));
+}
+
+export function getDemoNotificationAttempts(taskId?: string) {
+  const items = taskId
+    ? state.notification_attempts.filter((attempt) => attempt.task_id === taskId)
+    : state.notification_attempts;
+  return [...items].sort((a, b) => b.created.localeCompare(a.created));
+}
+
+export function recordDemoNotificationAttempt(params: {
+  taskId: string;
+  recipientUserId: string;
+  messagePreview: string;
+  messagePayload: string;
+  status: "mock_sent" | "sent" | "failed";
+  idempotencyKey: string;
+  error?: string;
+}) {
+  const existing = state.notification_attempts.find((attempt) => attempt.idempotency_key === params.idempotencyKey);
+  if (existing) return existing;
+
+  const created = {
+    id: mkId("notify_attempt"),
+    task_id: params.taskId,
+    recipient_user_id: params.recipientUserId,
+    channel: "graph_chatmessage" as const,
+    status: params.status,
+    idempotency_key: params.idempotencyKey,
+    message_preview: params.messagePreview,
+    message_payload: params.messagePayload,
+    error: params.error,
+    created: new Date().toISOString()
+  };
+
+  state.notification_attempts.push(created);
+  return created;
+}
+
+export function getDemoTasksWithNotifications() {
+  return getDemoTasks().map((task) => {
+    const attempts = getDemoNotificationAttempts(task.id);
+    return {
+      ...task,
+      notification_attempt_count: attempts.length,
+      notification_status: attempts[0]?.status ?? "not_triggered",
+      notification_preview: attempts[0]?.message_preview ?? null
+    };
+  });
 }
 
 export function approveDemoCandidate(params: {
