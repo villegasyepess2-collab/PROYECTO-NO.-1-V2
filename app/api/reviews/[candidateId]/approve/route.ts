@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { approveDemoCandidate, ensureDemoScenario, isDemoLocalMode } from "@/lib/demo/local-store";
+import { approveDemoCandidate, isDemoLocalMode } from "@/lib/demo/local-store";
 import { approveCandidateAndCreateTask } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
@@ -22,13 +22,14 @@ export async function POST(request: Request, { params }: { params: { candidateId
   }
 
   if (isDemoLocalMode()) {
-    ensureDemoScenario();
     try {
       const task = approveDemoCandidate({
         candidateId: params.candidateId,
         responsibleUserId: payload.responsibleUserId,
         requesterUserId: payload.requesterUserId,
-        dueDate: payload.dueDate
+        dueDate: payload.dueDate,
+        note: payload.note,
+        reviewerId: session.userId
       });
 
       return NextResponse.json({

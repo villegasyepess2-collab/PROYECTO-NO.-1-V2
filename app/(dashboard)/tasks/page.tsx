@@ -8,6 +8,8 @@ interface TaskItem {
   status: string;
   due_date: string;
   responsible_user_id: string;
+  requester_user_id?: string;
+  source_excerpt?: string;
 }
 
 export default function TasksPage() {
@@ -60,25 +62,9 @@ export default function TasksPage() {
     await loadTasks();
   };
 
-  const runReminders = async () => {
-    setMessage(null);
-    setError(null);
-
-    const response = await fetch("/api/reminders/run", { method: "POST" });
-    const payload = await response.json();
-
-    if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Reminder run failed");
-      return;
-    }
-
-    setMessage(`Reminders sent: ${payload.remindersSent}, overdue marked: ${payload.overdueMarked}`);
-    await loadTasks();
-  };
-
   return (
     <section className="card">
-      <h3>Task Lifecycle + Reminders</h3>
+      <h3>Tasks created from review</h3>
       <button onClick={loadTasks} style={{ marginBottom: 10 }}>Reload tasks</button>
 
       {items.length > 0 ? (
@@ -95,8 +81,10 @@ export default function TasksPage() {
                 />
                 <span>
                   <strong>{task.title}</strong> ({task.status}) · due {task.due_date} · owner {task.responsible_user_id}
+                  {task.requester_user_id ? ` · requester ${task.requester_user_id}` : ""}
                 </span>
               </label>
+              {task.source_excerpt ? <div><small>Evidence: {task.source_excerpt}</small></div> : null}
             </li>
           ))}
         </ul>
@@ -122,8 +110,6 @@ export default function TasksPage() {
         <input name="note" placeholder="Change note" />
         <button type="submit">Update status</button>
       </form>
-
-      <button onClick={runReminders}>Run reminder scheduler</button>
 
       {message ? <p style={{ color: "#065f46" }}>{message}</p> : null}
       {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}

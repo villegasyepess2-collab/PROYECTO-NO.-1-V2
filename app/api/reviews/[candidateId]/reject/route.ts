@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { ensureDemoScenario, isDemoLocalMode, rejectDemoCandidate } from "@/lib/demo/local-store";
+import { isDemoLocalMode, rejectDemoCandidate } from "@/lib/demo/local-store";
 import { rejectCandidate } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
@@ -10,9 +10,12 @@ export async function POST(request: Request, { params }: { params: { candidateId
   const payload = (await request.json()) as { note?: string };
 
   if (isDemoLocalMode()) {
-    ensureDemoScenario();
     try {
-      const result = rejectDemoCandidate(params.candidateId);
+      const result = rejectDemoCandidate({
+        candidateId: params.candidateId,
+        reviewerId: session.userId,
+        note: payload.note
+      });
       return NextResponse.json({ message: "Candidate rejected (demo mode)", id: result.id });
     } catch (error) {
       return NextResponse.json(

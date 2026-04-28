@@ -56,6 +56,14 @@ interface DemoState {
   transcripts: DemoTranscript[];
   candidates: DemoCandidate[];
   tasks: DemoTask[];
+  reviews: Array<{
+    id: string;
+    candidate_id: string;
+    action: "approve" | "reject" | "edit";
+    reviewer_id: string;
+    note?: string;
+    created: string;
+  }>;
 }
 
 const state: DemoState = {
@@ -63,7 +71,8 @@ const state: DemoState = {
   meetings: [],
   transcripts: [],
   candidates: [],
-  tasks: []
+  tasks: [],
+  reviews: []
 };
 
 function mkId(prefix: string) {
@@ -145,6 +154,7 @@ export function seedDemoScenario() {
   state.transcripts = [];
   state.candidates = [];
   state.tasks = [];
+  state.reviews = [];
 
   const now = new Date().toISOString();
 
@@ -309,9 +319,22 @@ export function approveDemoCandidate(params: {
   responsibleUserId: string;
   requesterUserId: string;
   dueDate: string;
+  note?: string;
+  reviewerId?: string;
 }) {
+  if (!params.responsibleUserId.trim()) throw new Error("responsibleUserId is required");
+  if (!params.requesterUserId.trim()) throw new Error("requesterUserId is required");
+  if (!params.dueDate.trim()) throw new Error("dueDate is required");
+
+  const dueDate = new Date(params.dueDate);
+  if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate must be a valid date");
+
   const candidate = state.candidates.find((c) => c.id === params.candidateId);
   if (!candidate) throw new Error("Candidate not found");
+  if (candidate.status === "rejected") throw new Error("Rejected candidates cannot be approved");
+
+  const existingTask = state.tasks.find((task) => task.task_candidate_id === params.candidateId);
+  if (existingTask) return existingTask;
 
   candidate.proposed_responsible_user_id = params.responsibleUserId;
   candidate.proposed_requester_user_id = params.requesterUserId;
@@ -335,15 +358,71 @@ export function approveDemoCandidate(params: {
   };
 
   state.tasks.push(task);
+  state.reviews.push({
+    id: mkId("review"),
+    candidate_id: params.candidateId,
+    action: "approve",
+    reviewer_id: params.reviewerId ?? "demo.reviewer",
+    note: params.note,
+    created: new Date().toISOString()
+  });
 
   return task;
 }
 
-export function rejectDemoCandidate(candidateId: string) {
+export function editDemoCandidate(params: {
+  candidateId: string;
+  title?: string;
+  responsibleUserId?: string;
+  dueDate?: string;
+  note?: string;
+  reviewerId?: string;
+}) {
+  const candidate = state.candidates.find((c) => c.id === params.candidateId);
+  if (!candidate) throw new Error("Candidate not found");
+  if (candidate.status !== "requires_review") throw new Error("Only review candidates can be edited");
+
+  if (typeof params.title === "string" && params.title.trim()) {
+    candidate.title = params.title.trim();
+  }
+
+  if (typeof params.responsibleUserId === "string" && params.responsibleUserId.trim()) {
+    candidate.proposed_responsible_user_id = params.responsibleUserId.trim();
+  }
+
+  if (typeof params.dueDate === "string" && params.dueDate.trim()) {
+    const dueDate = new Date(params.dueDate);
+    if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate must be a valid date");
+    candidate.due_date = params.dueDate;
+  }
+
+  state.reviews.push({
+    id: mkId("review"),
+    candidate_id: params.candidateId,
+    action: "edit",
+    reviewer_id: params.reviewerId ?? "demo.reviewer",
+    note: params.note,
+    created: new Date().toISOString()
+  });
+
+  return candidate;
+}
+
+export function rejectDemoCandidate(params: { candidateId: string; reviewerId?: string; note?: string }) {
+  const candidateId = params.candidateId;
   const candidate = state.candidates.find((c) => c.id === candidateId);
   if (!candidate) throw new Error("Candidate not found");
+  if (candidate.status === "approved") throw new Error("Approved candidates cannot be rejected");
   candidate.status = "rejected";
   candidate.validation_required = false;
+  state.reviews.push({
+    id: mkId("review"),
+    candidate_id: candidateId,
+    action: "reject",
+    reviewer_id: params.reviewerId ?? "demo.reviewer",
+    note: params.note,
+    created: new Date().toISOString()
+  });
   return candidate;
 }
 

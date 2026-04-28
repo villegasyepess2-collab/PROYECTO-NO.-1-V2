@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { isDemoLocalMode } from "@/lib/demo/local-store";
+import { editDemoCandidate, isDemoLocalMode } from "@/lib/demo/local-store";
 import { editCandidate } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
@@ -14,7 +14,24 @@ export async function POST(request: Request, { params }: { params: { candidateId
   }
 
   if (isDemoLocalMode()) {
-    return NextResponse.json({ message: "Candidate updated (demo mode simulated)", id: params.candidateId });
+    try {
+      const patch = payload.patch as Record<string, unknown>;
+      const result = editDemoCandidate({
+        candidateId: params.candidateId,
+        title: typeof patch.title === "string" ? patch.title : undefined,
+        responsibleUserId:
+          typeof patch.proposed_responsible_user_id === "string" ? patch.proposed_responsible_user_id : undefined,
+        dueDate: typeof patch.due_date === "string" ? patch.due_date : undefined,
+        note: payload.note,
+        reviewerId: session.userId
+      });
+      return NextResponse.json({ message: "Candidate updated (demo mode)", id: result.id });
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Edit failed", detail: error instanceof Error ? error.message : "Unknown error" },
+        { status: 400 }
+      );
+    }
   }
 
   try {

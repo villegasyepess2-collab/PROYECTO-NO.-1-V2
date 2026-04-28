@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 interface ReviewItem {
   id: string;
@@ -18,6 +18,7 @@ export default function ReviewQueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -83,6 +84,89 @@ export default function ReviewQueuePage() {
     await load();
   };
 
+  const editCandidate = async (form: FormData, candidateId: string) => {
+    setPendingId(candidateId);
+    setError(null);
+    setMessage(null);
+
+    const response = await fetch(`/api/reviews/${candidateId}/edit`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        patch: {
+          title: form.get("title"),
+          proposed_responsible_user_id: form.get("responsibleUserId"),
+          due_date: form.get("dueDate")
+        },
+        note: "Edited in PoC review"
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(payload.detail ?? payload.error ?? "Edit failed");
+      setPendingId(null);
+      return;
+    }
+
+    setMessage(`Candidate updated: ${payload.id}`);
+    await load();
+    setPendingId(null);
+  };
+
+  const approveCandidate = async (event: FormEvent<HTMLFormElement>, candidateId: string) => {
+    event.preventDefault();
+    setPendingId(candidateId);
+    setError(null);
+    setMessage(null);
+
+    const form = new FormData(event.currentTarget);
+    const response = await fetch(`/api/reviews/${candidateId}/approve`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        responsibleUserId: form.get("responsibleUserId"),
+        requesterUserId: form.get("requesterUserId") || "demo.requester",
+        dueDate: form.get("dueDate"),
+        note: "Approved in PoC review"
+      })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(payload.detail ?? payload.error ?? "Approve failed");
+      setPendingId(null);
+      return;
+    }
+
+    setMessage(`Task created: ${payload.taskId}`);
+    await load();
+    setPendingId(null);
+  };
+
+  const rejectCandidate = async (candidateId: string) => {
+    setPendingId(candidateId);
+    setError(null);
+    setMessage(null);
+
+    const response = await fetch(`/api/reviews/${candidateId}/reject`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ note: "Rejected in PoC review" })
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(payload.detail ?? payload.error ?? "Reject failed");
+      setPendingId(null);
+      return;
+    }
+
+    setMessage(`Candidate rejected: ${payload.id}`);
+    await load();
+    setPendingId(null);
+  };
+
   return (
     <div className="card">
       <h3>Manual Review Queue</h3>
@@ -99,13 +183,46 @@ export default function ReviewQueuePage() {
       ) : (
         <ul>
           {items.map((item) => (
-            <li key={item.id} style={{ marginBottom: 16 }}>
+            <li key={item.id} style={{ marginBottom: 20 }}>
               <strong>{item.title}</strong> — confidence {item.confidence_score}
               <div>{item.source_excerpt}</div>
               <small>
                 Responsible: {item.proposed_responsible_user_id ?? "not detected"} | Due: {item.due_date ?? "not detected"}
               </small>
               {item.ambiguity_reasons?.length ? <small>Reasons: {item.ambiguity_reasons.join(", ")}</small> : null}
+
+              <form onSubmit={(event) => approveCandidate(event, item.id)} style={{ display: "grid", gap: 6, marginTop: 8 }}>
+                <input name="title" defaultValue={item.title} placeholder="Title" />
+                <input
+                  name="responsibleUserId"
+                  defaultValue={item.proposed_responsible_user_id ?? ""}
+                  placeholder="Responsible user id"
+                  required
+                />
+                <input name="requesterUserId" defaultValue={item.proposed_requester_user_id ?? "demo.requester"} placeholder="Requester user id" required />
+                <input name="dueDate" defaultValue={item.due_date ?? ""} type="date" required />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      const formEl = event.currentTarget.closest("form");
+                      if (!formEl) return;
+                      editCandidate(new FormData(formEl), item.id).catch((e) =>
+                        setError(e instanceof Error ? e.message : "Edit failed")
+                      );
+                    }}
+                    disabled={pendingId === item.id}
+                  >
+                    Edit
+                  </button>
+                  <button type="submit" disabled={pendingId === item.id}>
+                    Approve
+                  </button>
+                  <button type="button" onClick={() => rejectCandidate(item.id)} disabled={pendingId === item.id}>
+                    Reject
+                  </button>
+                </div>
+              </form>
             </li>
           ))}
         </ul>
