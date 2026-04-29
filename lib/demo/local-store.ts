@@ -92,6 +92,12 @@ function mkId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function daysUntilDate(dateIso: string): number {
+  const now = new Date();
+  const due = new Date(dateIso);
+  return Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function daysFromToday(days: number): string {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() + days);
@@ -345,7 +351,7 @@ export function recordDemoNotificationAttempt(params: {
   error?: string;
 }) {
   const existing = state.notification_attempts.find((attempt) => attempt.idempotency_key === params.idempotencyKey);
-  if (existing) return existing;
+  if (existing) return { attempt: existing, created: false as const };
 
   const created = {
     id: mkId("notify_attempt"),
@@ -361,17 +367,26 @@ export function recordDemoNotificationAttempt(params: {
   };
 
   state.notification_attempts.push(created);
-  return created;
+  return { attempt: created, created: true as const };
 }
 
 export function getDemoTasksWithNotifications() {
   return getDemoTasks().map((task) => {
-    const attempts = getDemoNotificationAttempts(task.id);
+    const attempts = getDemoNotificationAttempts(task.id).filter((attempt) =>
+      attempt.idempotency_key.includes(":task_created:")
+    );
+    const reminderAttempts = getDemoNotificationAttempts(task.id).filter(
+      (attempt) =>
+        attempt.idempotency_key.includes(":due_reminder:") || attempt.idempotency_key.includes(":overdue_reminder:")
+    );
     return {
       ...task,
       notification_attempt_count: attempts.length,
       notification_status: attempts[0]?.status ?? "not_triggered",
-      notification_preview: attempts[0]?.message_preview ?? null
+      notification_preview: attempts[0]?.message_preview ?? null,
+      reminder_attempt_count: reminderAttempts.length,
+      reminder_status: reminderAttempts[0]?.status ?? "not_triggered",
+      reminder_last_run_at: reminderAttempts[0]?.created ?? null
     };
   });
 }
@@ -498,22 +513,51 @@ export function updateDemoTaskStatus(taskId: string, status: TaskLifecycleStatus
 }
 
 export function runDemoReminders() {
+  const offsets = (process.env.REMINDER_DAYS_BEFORE ?? "3,1")
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value) && value >= 0);
   const today = new Date().toISOString().slice(0, 10);
   let remindersSent = 0;
   let overdueMarked = 0;
 
   for (const task of state.tasks) {
     if (task.status === "completed") continue;
+    const days = daysUntilDate(task.due_date);
 
-    if (task.due_date < today && task.status !== "overdue") {
+    if (days < 0 && task.status !== "overdue") {
       task.status = "overdue";
       overdueMarked += 1;
     }
 
-    if (task.due_date <= today) remindersSent += 1;
+    if (days >= 0 && offsets.includes(days)) {
+      const key = `${task.id}:due_reminder:${today}`;
+      const result = recordDemoNotificationAttempt({
+        taskId: task.id,
+        recipientUserId: task.responsible_user_id,
+        messagePreview: `Reminder: "${task.title}" is due on ${task.due_date}`,
+        messagePayload: `<p>Reminder: <b>${task.title}</b> is due on ${task.due_date}</p>`,
+        status: "mock_sent",
+        idempotencyKey: key
+      });
+      if (result.created) remindersSent += 1;
+    }
+
+    if (days < 0) {
+      const key = `${task.id}:overdue_reminder:${today}`;
+      const result = recordDemoNotificationAttempt({
+        taskId: task.id,
+        recipientUserId: task.responsible_user_id,
+        messagePreview: `Overdue: "${task.title}" was due on ${task.due_date}`,
+        messagePayload: `<p>Overdue: <b>${task.title}</b> was due on ${task.due_date}</p>`,
+        status: "mock_sent",
+        idempotencyKey: key
+      });
+      if (result.created) remindersSent += 1;
+    }
   }
 
-  return { remindersSent, overdueMarked, scanned: state.tasks.length };
+  return { remindersSent, overdueMarked, scanned: state.tasks.length, mode: "mock_sent" as const };
 }
 
 export function addDemoInpersonMeeting(params?: { meetingTitle?: string; transcriptText?: string; organizerUserId?: string }) {

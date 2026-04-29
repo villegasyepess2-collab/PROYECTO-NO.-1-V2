@@ -15,3 +15,7 @@ test("shouldMarkOverdue ignores completed tasks", () => {
   assert.equal(shouldMarkOverdue(-1, "pending"), true);
   assert.equal(shouldMarkOverdue(-2, "completed"), false);
 });
+
+test("shouldSendDueReminder ignores overdue tasks", () => {
+  assert.equal(shouldSendDueReminder(-1, [3, 1, 0]), false);
+});

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
-import { ensureDemoScenario, isDemoLocalMode, runDemoReminders } from "@/lib/demo/local-store";
+import { isDemoLocalMode, runDemoReminders } from "@/lib/demo/local-store";
 import { runReminderScheduler } from "@/lib/scheduler/reminders";
 
 export async function POST() {
@@ -8,7 +8,6 @@ export async function POST() {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (isDemoLocalMode()) {
-    ensureDemoScenario();
     const result = runDemoReminders();
     return NextResponse.json({ message: "Reminders executed (demo mode)", ...result });
   }

@@ -9,7 +9,7 @@ Internal web app for meeting task extraction and follow-up.
 - ✅ Fase 4: extracción mock/determinista en modo demo y candidatos visibles en `/review`.
 - ✅ Fase 5: validación manual demo (editar/aprobar/rechazar) y creación de tareas visibles en `/tasks`.
 - ✅ Fase 6: notificación post-aprobación tipo Graph `chatMessage` con modo demo `mock_sent` y evidencia visible en `/tasks`.
-- ⏳ Fase 7+ quedan en avance controlado por orden oficial.
+- ✅ Fase 7: ejecución local de recordatorios (manual), evidencia visible en `/tasks` y overdue expuesto.
 
 ## Official build order (strict)
 1. documentación y estructura base app

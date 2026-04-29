@@ -13,6 +13,9 @@ interface TaskItem {
   notification_status?: "not_triggered" | "mock_sent" | "sent" | "failed";
   notification_attempt_count?: number;
   notification_preview?: string | null;
+  reminder_status?: "not_triggered" | "mock_sent" | "sent" | "failed";
+  reminder_attempt_count?: number;
+  reminder_last_run_at?: string | null;
 }
 
 export default function TasksPage() {
@@ -65,10 +68,29 @@ export default function TasksPage() {
     await loadTasks();
   };
 
+  const runReminders = async () => {
+    setMessage(null);
+    setError(null);
+
+    const response = await fetch("/api/reminders/run", { method: "POST" });
+    const payload = await response.json();
+
+    if (!response.ok) {
+      setError(payload.detail ?? payload.error ?? "Reminder run failed");
+      return;
+    }
+
+    setMessage(`Reminders sent: ${payload.remindersSent}, overdue marked: ${payload.overdueMarked}`);
+    await loadTasks();
+  };
+
   return (
     <section className="card">
       <h3>Tasks created from review</h3>
-      <button onClick={loadTasks} style={{ marginBottom: 10 }}>Reload tasks</button>
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        <button onClick={loadTasks}>Reload tasks</button>
+        <button onClick={runReminders}>Run reminders</button>
+      </div>
 
       {items.length > 0 ? (
         <ul>
@@ -94,6 +116,12 @@ export default function TasksPage() {
                 </small>
               </div>
               {task.notification_preview ? <div><small>Message: {task.notification_preview}</small></div> : null}
+              <div>
+                <small>
+                  Reminder: {task.reminder_status ?? "not_triggered"} · attempts: {task.reminder_attempt_count ?? 0}
+                </small>
+              </div>
+              {task.reminder_last_run_at ? <div><small>Last reminder: {task.reminder_last_run_at}</small></div> : null}
             </li>
           ))}
         </ul>
