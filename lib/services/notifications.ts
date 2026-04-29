@@ -14,7 +14,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts: number): Promise<{ r
       const result = await fn();
       return { result, tries: i };
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error("Unknown send error");
+      lastError = error instanceof Error ? error : new Error("Error de envío desconocido");
     }
   }
 
@@ -61,7 +61,7 @@ export async function createAndSendTaskCreatedNotifications(params: {
       idempotency_key: idempotencyKey
     });
 
-    const htmlBody = `<p>Task assigned: <b>${params.taskTitle}</b></p><p>Due date: ${params.dueDate}</p>`;
+    const htmlBody = `<p>Tarea asignada: <b>${params.taskTitle}</b></p><p>Fecha límite: ${params.dueDate}</p>`;
 
     const retry = await withRetry(() => sendTeamsChatMessage({ chatId: user.teams_chat_id, htmlBody }), 3);
 
@@ -95,15 +95,15 @@ function buildTaskCreatedNotificationContent(params: {
   requesterUserId: string;
   sourceExcerpt?: string;
 }) {
-  const preview = `Task "${params.taskTitle}" assigned to ${params.responsibleUserId} (due ${params.dueDate})`;
+  const preview = `Tarea "${params.taskTitle}" asignada a ${params.responsibleUserId} (vence ${params.dueDate})`;
   const htmlBody = [
-    `<p><b>Task assigned</b></p>`,
-    `<p>Task: <b>${params.taskTitle}</b></p>`,
-    `<p>Responsible: ${params.responsibleUserId}</p>`,
-    `<p>Requester: ${params.requesterUserId}</p>`,
-    `<p>Due date: ${params.dueDate}</p>`,
-    `<p>Task ID: ${params.taskId}</p>`,
-    `<p>Evidence: ${params.sourceExcerpt ?? "N/A"}</p>`
+    `<p><b>Tarea asignada</b></p>`,
+    `<p>Tarea: <b>${params.taskTitle}</b></p>`,
+    `<p>Responsable: ${params.responsibleUserId}</p>`,
+    `<p>Solicitante: ${params.requesterUserId}</p>`,
+    `<p>Fecha límite: ${params.dueDate}</p>`,
+    `<p>ID de tarea: ${params.taskId}</p>`,
+    `<p>Evidencia: ${params.sourceExcerpt ?? "No aplica"}</p>`
   ].join("");
 
   return { preview, htmlBody };

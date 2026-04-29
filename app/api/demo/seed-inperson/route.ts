@@ -4,11 +4,11 @@ import { addDemoInpersonMeeting, isDemoLocalMode } from "@/lib/demo/local-store"
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (!isDemoLocalMode()) {
     return NextResponse.json(
-      { error: "In-person demo seed is only available in local PoC bypass mode" },
+      { error: "La carga demo presencial solo está disponible en modo PoC local con bypass" },
       { status: 400 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    message: "In-person demo recording loaded",
+    message: "Grabación demo presencial cargada",
     actorUserId: session.userId,
     ...seeded
   });

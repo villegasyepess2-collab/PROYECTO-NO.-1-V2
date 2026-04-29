@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const password = typeof body.password === "string" ? body.password : "";
 
   if (!email || !password) {
-    return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    return NextResponse.json({ error: "Correo electrónico y contraseña son obligatorios" }, { status: 400 });
   }
 
   try {
@@ -70,6 +70,6 @@ export async function POST(request: Request) {
 
     return response;
   } catch {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
   }
 }

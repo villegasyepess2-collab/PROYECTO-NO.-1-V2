@@ -5,7 +5,7 @@ import { rejectCandidate } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const payload = (await request.json()) as { note?: string };
 
@@ -16,10 +16,10 @@ export async function POST(request: Request, { params }: { params: { candidateId
         reviewerId: session.userId,
         note: payload.note
       });
-      return NextResponse.json({ message: "Candidate rejected (demo mode)", id: result.id });
+      return NextResponse.json({ message: "Candidato rechazado (modo demo)", id: result.id });
     } catch (error) {
       return NextResponse.json(
-        { error: "Reject failed", detail: error instanceof Error ? error.message : "Unknown error" },
+        { error: "Error al rechazar", detail: error instanceof Error ? error.message : "Error desconocido" },
         { status: 404 }
       );
     }
@@ -32,10 +32,10 @@ export async function POST(request: Request, { params }: { params: { candidateId
       note: payload.note
     });
 
-    return NextResponse.json({ message: "Candidate rejected", id: result.id });
+    return NextResponse.json({ message: "Candidato rechazado", id: result.id });
   } catch (error) {
     return NextResponse.json(
-      { error: "Reject failed", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Error al rechazar", detail: error instanceof Error ? error.message : "Error desconocido" },
       { status: 502 }
     );
   }

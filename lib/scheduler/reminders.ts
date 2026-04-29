@@ -31,7 +31,7 @@ export async function runReminderScheduler(actorId: string) {
         to_status: "overdue",
         changed_by: actorId,
         changed_at: new Date().toISOString(),
-        note: "Automatically marked overdue"
+        note: "Marcada automáticamente como vencida"
       });
       overdueMarked += 1;
     }
@@ -42,7 +42,7 @@ export async function runReminderScheduler(actorId: string) {
         taskId: task.id,
         userId: task.responsible_user_id,
         type: "due_reminder",
-        content: `<p>Reminder: <b>${task.title}</b> is due on ${task.due_date}</p>`,
+        content: `<p>Recordatorio: <b>${task.title}</b> vence el ${task.due_date}</p>`,
         idempotencyKey: key
       });
       if (send.sent) remindersSent += 1;
@@ -54,7 +54,7 @@ export async function runReminderScheduler(actorId: string) {
         taskId: task.id,
         userId: task.responsible_user_id,
         type: "overdue_reminder",
-        content: `<p>Overdue: <b>${task.title}</b> was due on ${task.due_date}</p>`,
+        content: `<p>Vencida: <b>${task.title}</b> venció el ${task.due_date}</p>`,
         idempotencyKey: key
       });
       if (send.sent) remindersSent += 1;

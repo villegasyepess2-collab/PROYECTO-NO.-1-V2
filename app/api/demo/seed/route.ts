@@ -4,11 +4,11 @@ import { isDemoLocalMode, seedDemoScenario } from "@/lib/demo/local-store";
 
 export async function POST() {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (!isDemoLocalMode()) {
     return NextResponse.json(
-      { error: "Demo seed is only available in local PoC bypass mode" },
+      { error: "La carga demo solo está disponible en modo PoC local con bypass" },
       { status: 400 }
     );
   }
@@ -16,7 +16,7 @@ export async function POST() {
   const result = seedDemoScenario();
 
   return NextResponse.json({
-    message: "Demo scenario loaded",
+    message: "Escenario demo cargado",
     actorUserId: session.userId,
     ...result
   });

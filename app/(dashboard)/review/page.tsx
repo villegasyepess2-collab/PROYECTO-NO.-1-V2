@@ -27,7 +27,7 @@ export default function ReviewQueuePage() {
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Unable to load queue");
+      setError(payload.detail ?? payload.error ?? "No se pudo cargar la cola de revisión");
       setLoading(false);
       return;
     }
@@ -37,7 +37,7 @@ export default function ReviewQueuePage() {
   };
 
   useEffect(() => {
-    load().catch((e) => setError(e instanceof Error ? e.message : "Unknown error"));
+    load().catch((e) => setError(e instanceof Error ? e.message : "Error desconocido"));
   }, []);
 
   const seedTeamsAndLoad = async () => {
@@ -46,19 +46,19 @@ export default function ReviewQueuePage() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        meetingTitle: "Teams Demo for Review Queue",
+        meetingTitle: "Demo de Teams para cola de revisión",
         transcriptText:
-          "I request that Carla prepare the release summary by Friday. Please take care of sharing it with support."
+          "Solicito que Carla prepare el resumen de la liberación para el viernes y lo comparta con soporte."
       })
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Unable to seed Teams demo");
+      setError(payload.detail ?? payload.error ?? "No se pudo cargar la demo de Teams");
       return;
     }
 
-    setMessage(`Teams demo seeded: ${payload.meetingId}`);
+    setMessage(`Demo de Teams cargada: ${payload.meetingId}`);
     await load();
   };
 
@@ -68,19 +68,19 @@ export default function ReviewQueuePage() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        meetingTitle: "In-person Demo for Review Queue",
+        meetingTitle: "Demo presencial para cola de revisión",
         transcriptText:
-          "In this in-person follow-up, Maria asked Diego to deliver the pilot rollout checklist by next Thursday."
+          "En este seguimiento presencial, María pidió a Diego entregar la lista del piloto para el próximo jueves."
       })
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Unable to seed in-person demo");
+      setError(payload.detail ?? payload.error ?? "No se pudo cargar la demo presencial");
       return;
     }
 
-    setMessage(`In-person demo seeded: ${payload.meetingId}`);
+    setMessage(`Demo presencial cargada: ${payload.meetingId}`);
     await load();
   };
 
@@ -98,18 +98,18 @@ export default function ReviewQueuePage() {
           proposed_responsible_user_id: form.get("responsibleUserId"),
           due_date: form.get("dueDate")
         },
-        note: "Edited in PoC review"
+        note: "Editado en revisión PoC"
       })
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Edit failed");
+      setError(payload.detail ?? payload.error ?? "Error al editar");
       setPendingId(null);
       return;
     }
 
-    setMessage(`Candidate updated: ${payload.id}`);
+    setMessage(`Candidato actualizado: ${payload.id}`);
     await load();
     setPendingId(null);
   };
@@ -128,18 +128,18 @@ export default function ReviewQueuePage() {
         responsibleUserId: form.get("responsibleUserId"),
         requesterUserId: form.get("requesterUserId") || "demo.requester",
         dueDate: form.get("dueDate"),
-        note: "Approved in PoC review"
+        note: "Aprobado en revisión PoC"
       })
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Approve failed");
+      setError(payload.detail ?? payload.error ?? "Error al aprobar");
       setPendingId(null);
       return;
     }
 
-    setMessage(`Task created: ${payload.taskId}`);
+    setMessage(`Tarea creada: ${payload.taskId}`);
     await load();
     setPendingId(null);
   };
@@ -152,54 +152,59 @@ export default function ReviewQueuePage() {
     const response = await fetch(`/api/reviews/${candidateId}/reject`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ note: "Rejected in PoC review" })
+      body: JSON.stringify({ note: "Rechazado en revisión PoC" })
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      setError(payload.detail ?? payload.error ?? "Reject failed");
+      setError(payload.detail ?? payload.error ?? "Error al rechazar");
       setPendingId(null);
       return;
     }
 
-    setMessage(`Candidate rejected: ${payload.id}`);
+    setMessage(`Candidato rechazado: ${payload.id}`);
     await load();
     setPendingId(null);
   };
 
   return (
     <div className="card">
-      <h3>Manual Review Queue</h3>
+      <h3>Cola de revisión manual</h3>
       <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-        <button onClick={seedTeamsAndLoad}>Seed Teams candidates</button>
-        <button onClick={seedInPersonAndLoad}>Seed in-person candidates</button>
-        <button onClick={load} disabled={loading}>{loading ? "Refreshing..." : "Refresh queue"}</button>
+        <button onClick={seedTeamsAndLoad}>Cargar candidatos demo de Teams</button>
+        <button onClick={seedInPersonAndLoad}>Cargar candidatos demo presenciales</button>
+        <button onClick={load} disabled={loading}>{loading ? "Actualizando..." : "Actualizar cola"}</button>
       </div>
       {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}
       {message ? <p style={{ color: "#065f46" }}>{message}</p> : null}
 
       {items.length === 0 ? (
-        <p>No candidates waiting for review.</p>
+        <p>No hay candidatos pendientes de revisión.</p>
       ) : (
         <ul>
           {items.map((item) => (
             <li key={item.id} style={{ marginBottom: 20 }}>
-              <strong>{item.title}</strong> — confidence {item.confidence_score}
+              <strong>{item.title}</strong> — confianza {item.confidence_score}
               <div>{item.source_excerpt}</div>
               <small>
-                Responsible: {item.proposed_responsible_user_id ?? "not detected"} | Due: {item.due_date ?? "not detected"}
+                Responsable: {item.proposed_responsible_user_id ?? "no detectado"} | Fecha límite: {item.due_date ?? "no detectada"}
               </small>
-              {item.ambiguity_reasons?.length ? <small>Reasons: {item.ambiguity_reasons.join(", ")}</small> : null}
+              {item.ambiguity_reasons?.length ? <small>Motivos: {item.ambiguity_reasons.join(", ")}</small> : null}
 
               <form onSubmit={(event) => approveCandidate(event, item.id)} style={{ display: "grid", gap: 6, marginTop: 8 }}>
-                <input name="title" defaultValue={item.title} placeholder="Title" />
+                <input name="title" defaultValue={item.title} placeholder="Título" />
                 <input
                   name="responsibleUserId"
                   defaultValue={item.proposed_responsible_user_id ?? ""}
-                  placeholder="Responsible user id"
+                  placeholder="ID de usuario responsable"
                   required
                 />
-                <input name="requesterUserId" defaultValue={item.proposed_requester_user_id ?? "demo.requester"} placeholder="Requester user id" required />
+                <input
+                  name="requesterUserId"
+                  defaultValue={item.proposed_requester_user_id ?? "demo.requester"}
+                  placeholder="ID de usuario solicitante"
+                  required
+                />
                 <input name="dueDate" defaultValue={item.due_date ?? ""} type="date" required />
                 <div style={{ display: "flex", gap: 8 }}>
                   <button
@@ -208,18 +213,18 @@ export default function ReviewQueuePage() {
                       const formEl = event.currentTarget.closest("form");
                       if (!formEl) return;
                       editCandidate(new FormData(formEl), item.id).catch((e) =>
-                        setError(e instanceof Error ? e.message : "Edit failed")
+                        setError(e instanceof Error ? e.message : "Error al editar")
                       );
                     }}
                     disabled={pendingId === item.id}
                   >
-                    Edit
+                    Editar
                   </button>
                   <button type="submit" disabled={pendingId === item.id}>
-                    Approve
+                    Aprobar
                   </button>
                   <button type="button" onClick={() => rejectCandidate(item.id)} disabled={pendingId === item.id}>
-                    Reject
+                    Rechazar
                   </button>
                 </div>
               </form>

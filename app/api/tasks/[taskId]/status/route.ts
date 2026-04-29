@@ -8,22 +8,22 @@ const allowed = ["pending", "in_progress", "blocked", "overdue", "completed"];
 
 export async function POST(request: Request, { params }: { params: { taskId: string } }) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const payload = (await request.json()) as { status?: string; note?: string };
 
   if (!payload.status || !allowed.includes(payload.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
   }
 
   if (isDemoLocalMode()) {
     ensureDemoScenario();
     try {
       const updated = updateDemoTaskStatus(params.taskId, payload.status as TaskLifecycleStatus);
-      return NextResponse.json({ message: "Status updated (demo mode)", id: updated.id, status: updated.status });
+      return NextResponse.json({ message: "Estado actualizado (modo demo)", id: updated.id, status: updated.status });
     } catch (error) {
       return NextResponse.json(
-        { error: "Status update failed", detail: error instanceof Error ? error.message : "Unknown error" },
+        { error: "Error al actualizar estado", detail: error instanceof Error ? error.message : "Error desconocido" },
         { status: 404 }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: Request, { params }: { params: { taskId: str
       to_status: payload.status,
       changed_by: session.userId,
       changed_at: new Date().toISOString(),
-      note: payload.note ?? "Status updated"
+      note: payload.note ?? "Estado actualizado"
     });
 
     await pb.collection("audit_logs").create({
@@ -57,10 +57,10 @@ export async function POST(request: Request, { params }: { params: { taskId: str
       metadata: { from: current.status, to: payload.status }
     });
 
-    return NextResponse.json({ message: "Status updated", id: updated.id, status: updated.status });
+    return NextResponse.json({ message: "Estado actualizado", id: updated.id, status: updated.status });
   } catch (error) {
     return NextResponse.json(
-      { error: "Status update failed", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Error al actualizar estado", detail: error instanceof Error ? error.message : "Error desconocido" },
       { status: 502 }
     );
   }

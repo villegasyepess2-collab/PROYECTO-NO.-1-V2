@@ -6,7 +6,7 @@ import { approveCandidateAndCreateTask } from "@/lib/services/review-workflow";
 
 export async function POST(request: Request, { params }: { params: { candidateId: string } }) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const payload = (await request.json()) as {
     responsibleUserId?: string;
@@ -17,7 +17,7 @@ export async function POST(request: Request, { params }: { params: { candidateId
 
   if (!payload.responsibleUserId || !payload.requesterUserId || !payload.dueDate) {
     return NextResponse.json(
-      { error: "responsibleUserId, requesterUserId, and dueDate are required" },
+      { error: "responsibleUserId, requesterUserId y dueDate son obligatorios" },
       { status: 400 }
     );
   }
@@ -43,14 +43,14 @@ export async function POST(request: Request, { params }: { params: { candidateId
       });
 
       return NextResponse.json({
-        message: "Candidate approved and task created (demo mode)",
+        message: "Candidato aprobado y tarea creada (modo demo)",
         taskId: task.id,
         reviewId: `demo_review_${params.candidateId}`,
         notifications
       });
     } catch (error) {
       return NextResponse.json(
-        { error: "Approval failed", detail: error instanceof Error ? error.message : "Unknown error" },
+        { error: "Error al aprobar", detail: error instanceof Error ? error.message : "Error desconocido" },
         { status: 404 }
       );
     }
@@ -66,10 +66,10 @@ export async function POST(request: Request, { params }: { params: { candidateId
       note: payload.note
     });
 
-    return NextResponse.json({ message: "Candidate approved and task created", ...result });
+    return NextResponse.json({ message: "Candidato aprobado y tarea creada", ...result });
   } catch (error) {
     return NextResponse.json(
-      { error: "Approval failed", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Error al aprobar", detail: error instanceof Error ? error.message : "Error desconocido" },
       { status: 502 }
     );
   }

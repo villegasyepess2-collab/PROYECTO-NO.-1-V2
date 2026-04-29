@@ -399,16 +399,16 @@ export function approveDemoCandidate(params: {
   note?: string;
   reviewerId?: string;
 }) {
-  if (!params.responsibleUserId.trim()) throw new Error("responsibleUserId is required");
-  if (!params.requesterUserId.trim()) throw new Error("requesterUserId is required");
-  if (!params.dueDate.trim()) throw new Error("dueDate is required");
+  if (!params.responsibleUserId.trim()) throw new Error("responsibleUserId es obligatorio");
+  if (!params.requesterUserId.trim()) throw new Error("requesterUserId es obligatorio");
+  if (!params.dueDate.trim()) throw new Error("dueDate es obligatorio");
 
   const dueDate = new Date(params.dueDate);
-  if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate must be a valid date");
+  if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate debe ser una fecha válida");
 
   const candidate = state.candidates.find((c) => c.id === params.candidateId);
-  if (!candidate) throw new Error("Candidate not found");
-  if (candidate.status === "rejected") throw new Error("Rejected candidates cannot be approved");
+  if (!candidate) throw new Error("Candidato no encontrado");
+  if (candidate.status === "rejected") throw new Error("Los candidatos rechazados no se pueden aprobar");
 
   const existingTask = state.tasks.find((task) => task.task_candidate_id === params.candidateId);
   if (existingTask) return existingTask;
@@ -456,8 +456,8 @@ export function editDemoCandidate(params: {
   reviewerId?: string;
 }) {
   const candidate = state.candidates.find((c) => c.id === params.candidateId);
-  if (!candidate) throw new Error("Candidate not found");
-  if (candidate.status !== "requires_review") throw new Error("Only review candidates can be edited");
+  if (!candidate) throw new Error("Candidato no encontrado");
+  if (candidate.status !== "requires_review") throw new Error("Solo se pueden editar candidatos en revisión");
 
   if (typeof params.title === "string" && params.title.trim()) {
     candidate.title = params.title.trim();
@@ -469,7 +469,7 @@ export function editDemoCandidate(params: {
 
   if (typeof params.dueDate === "string" && params.dueDate.trim()) {
     const dueDate = new Date(params.dueDate);
-    if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate must be a valid date");
+    if (Number.isNaN(dueDate.getTime())) throw new Error("dueDate debe ser una fecha válida");
     candidate.due_date = params.dueDate;
   }
 
@@ -488,8 +488,8 @@ export function editDemoCandidate(params: {
 export function rejectDemoCandidate(params: { candidateId: string; reviewerId?: string; note?: string }) {
   const candidateId = params.candidateId;
   const candidate = state.candidates.find((c) => c.id === candidateId);
-  if (!candidate) throw new Error("Candidate not found");
-  if (candidate.status === "approved") throw new Error("Approved candidates cannot be rejected");
+  if (!candidate) throw new Error("Candidato no encontrado");
+  if (candidate.status === "approved") throw new Error("Los candidatos aprobados no se pueden rechazar");
   candidate.status = "rejected";
   candidate.validation_required = false;
   state.reviews.push({
@@ -505,7 +505,7 @@ export function rejectDemoCandidate(params: { candidateId: string; reviewerId?: 
 
 export function updateDemoTaskStatus(taskId: string, status: TaskLifecycleStatus) {
   const task = state.tasks.find((t) => t.id === taskId);
-  if (!task) throw new Error("Task not found");
+  if (!task) throw new Error("Tarea no encontrada");
 
   task.status = status;
   task.completed_at = status === "completed" ? new Date().toISOString() : null;
@@ -535,8 +535,8 @@ export function runDemoReminders() {
       const result = recordDemoNotificationAttempt({
         taskId: task.id,
         recipientUserId: task.responsible_user_id,
-        messagePreview: `Reminder: "${task.title}" is due on ${task.due_date}`,
-        messagePayload: `<p>Reminder: <b>${task.title}</b> is due on ${task.due_date}</p>`,
+        messagePreview: `Recordatorio: "${task.title}" vence el ${task.due_date}`,
+        messagePayload: `<p>Recordatorio: <b>${task.title}</b> vence el ${task.due_date}</p>`,
         status: "mock_sent",
         idempotencyKey: key
       });
@@ -548,8 +548,8 @@ export function runDemoReminders() {
       const result = recordDemoNotificationAttempt({
         taskId: task.id,
         recipientUserId: task.responsible_user_id,
-        messagePreview: `Overdue: "${task.title}" was due on ${task.due_date}`,
-        messagePayload: `<p>Overdue: <b>${task.title}</b> was due on ${task.due_date}</p>`,
+        messagePreview: `Vencida: "${task.title}" venció el ${task.due_date}`,
+        messagePayload: `<p>Vencida: <b>${task.title}</b> venció el ${task.due_date}</p>`,
         status: "mock_sent",
         idempotencyKey: key
       });

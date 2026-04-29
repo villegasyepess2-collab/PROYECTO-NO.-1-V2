@@ -4,11 +4,11 @@ import { isDemoLocalMode, seedTeamsTranscriptDemo } from "@/lib/demo/local-store
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (!isDemoLocalMode()) {
     return NextResponse.json(
-      { error: "Teams demo seed is only available in local PoC bypass mode" },
+      { error: "La carga demo de Teams solo está disponible en modo PoC local con bypass" },
       { status: 400 }
     );
   }
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({
-    message: "Teams demo transcript loaded",
+    message: "Transcripción demo de Teams cargada",
     actorUserId: session.userId,
     sourceKind: "teams_internal",
     ...seeded

@@ -4,7 +4,7 @@ import { runExtractionPipeline } from "@/lib/services/extraction-pipeline";
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const payload = (await request.json()) as {
     meetingId?: string;
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   };
 
   if (!payload.meetingId || !payload.transcriptId || !payload.transcriptText) {
-    return NextResponse.json({ error: "meetingId, transcriptId and transcriptText are required" }, { status: 400 });
+    return NextResponse.json({ error: "meetingId, transcriptId y transcriptText son obligatorios" }, { status: 400 });
   }
 
   try {
@@ -23,10 +23,10 @@ export async function POST(request: Request) {
       transcriptText: payload.transcriptText
     });
 
-    return NextResponse.json({ message: "Extraction completed", ...result });
+    return NextResponse.json({ message: "Extracción completada", ...result });
   } catch (error) {
     return NextResponse.json(
-      { error: "Extraction failed", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "Error de extracción", detail: error instanceof Error ? error.message : "Error desconocido" },
       { status: 502 }
     );
   }

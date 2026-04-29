@@ -5,7 +5,7 @@ import { getDemoReviewItems, isDemoLocalMode } from "@/lib/demo/local-store";
 
 export async function GET() {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (isDemoLocalMode()) {
     const items = getDemoReviewItems().sort((a, b) => b.created.localeCompare(a.created));
@@ -25,7 +25,7 @@ export async function GET() {
     return NextResponse.json({ items: list.items });
   } catch (error) {
     return NextResponse.json(
-      { error: "Unable to load review queue", detail: error instanceof Error ? error.message : "Unknown error" },
+      { error: "No se pudo cargar la cola de revisión", detail: error instanceof Error ? error.message : "Error desconocido" },
       { status: 502 }
     );
   }

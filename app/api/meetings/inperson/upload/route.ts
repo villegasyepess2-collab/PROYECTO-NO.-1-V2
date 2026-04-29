@@ -7,11 +7,11 @@ import { transcribeAudioWithFasterWhisper } from "@/lib/recording/transcription"
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const form = await request.formData();
   const file = form.get("audio");
-  const meetingTitle = String(form.get("meetingTitle") ?? "In-person meeting");
+  const meetingTitle = String(form.get("meetingTitle") ?? "Reunión presencial");
 
   if (isDemoLocalMode()) {
     const simulated = addDemoInpersonMeeting({
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       organizerUserId: session.userId
     });
     return NextResponse.json({
-      message: "Recording processed (demo mode simulated)",
+      message: "Grabación procesada (modo demo simulado)",
       sourceKind: simulated.sourceKind,
       meetingId: simulated.meetingId,
       transcriptId: simulated.transcriptId,
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "audio file is required" }, { status: 400 });
+    return NextResponse.json({ error: "El archivo de audio es obligatorio" }, { status: 400 });
   }
 
   const audioBuffer = Buffer.from(await file.arrayBuffer());
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
-      message: "Recording uploaded and transcribed",
+      message: "Grabación cargada y transcrita",
       sourceKind: "in_person_recording",
       meetingId: meeting.id,
       transcriptId: transcript.id,
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       {
-        error: "In-person upload pipeline failed",
-        detail: error instanceof Error ? error.message : "Unknown error"
+        error: "Error en el flujo de carga presencial",
+        detail: error instanceof Error ? error.message : "Error desconocido"
       },
       { status: 502 }
     );

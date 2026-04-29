@@ -15,9 +15,19 @@ interface UploadResult {
   };
 }
 
+const recorderStatusLabel: Record<string, string> = {
+  idle: "inactivo",
+  recording: "grabando",
+  uploading: "cargando",
+  processed: "procesado",
+  seeding_demo: "cargando_demo",
+  demo_ready: "demo_lista",
+  error: "error"
+};
+
 export function InPersonRecorder() {
   const [recording, setRecording] = useState(false);
-  const [meetingTitle, setMeetingTitle] = useState("In-person meeting");
+  const [meetingTitle, setMeetingTitle] = useState("Reunión presencial");
   const [status, setStatus] = useState("idle");
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,12 +60,12 @@ export function InPersonRecorder() {
         });
 
         const payload = await response.json();
-        if (!response.ok) throw new Error(payload.detail ?? payload.error ?? "Upload failed");
+        if (!response.ok) throw new Error(payload.detail ?? payload.error ?? "Error al cargar");
 
         setResult(payload);
         setStatus("processed");
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Upload failed");
+        setError(e instanceof Error ? e.message : "Error al cargar");
         setStatus("error");
       }
     };
@@ -78,17 +88,17 @@ export function InPersonRecorder() {
         body: JSON.stringify({
           meetingTitle,
           transcriptText:
-            "In this in-person planning, Lucía asked Pedro to finish the deployment checklist by Friday and confirm pending approvals."
+            "En esta planificación presencial, Lucía pidió a Pedro completar la lista de despliegue para el viernes y confirmar aprobaciones pendientes."
         })
       });
 
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? payload.error ?? "Demo load failed");
+      if (!response.ok) throw new Error(payload.detail ?? payload.error ?? "Error al cargar la demo");
 
       setResult(payload);
       setStatus("demo_ready");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Demo load failed");
+      setError(e instanceof Error ? e.message : "Error al cargar la demo");
       setStatus("error");
     }
   };
@@ -100,23 +110,23 @@ export function InPersonRecorder() {
 
   return (
     <div className="card">
-      <h3>In-person Recording Flow</h3>
-      <label htmlFor="meetingTitle">Meeting title</label>
+      <h3>Flujo de grabación presencial</h3>
+      <label htmlFor="meetingTitle">Título de la reunión</label>
       <input id="meetingTitle" value={meetingTitle} onChange={(e) => setMeetingTitle(e.target.value)} />
-      <p>Status: <span className="code">{status}</span></p>
+      <p>Estado: <span className="code">{recorderStatusLabel[status] ?? status}</span></p>
       <button onClick={loadInPersonDemo} disabled={recording} style={{ marginRight: 8 }}>
-        Load in-person demo recording
+        Cargar grabación demo presencial
       </button>
-      {!recording ? <button onClick={start}>Start recording</button> : <button onClick={stop}>Stop recording</button>}
+      {!recording ? <button onClick={start}>Iniciar grabación</button> : <button onClick={stop}>Detener grabación</button>}
       {error ? <p style={{ color: "#b91c1c" }}>{error}</p> : null}
       {result ? (
         <ul>
-          {result.sourceKind ? <li>Source kind: <span className="code">{result.sourceKind}</span></li> : null}
-          <li>Meeting: <span className="code">{result.meetingId}</span></li>
-          <li>Transcript: <span className="code">{result.transcriptId}</span></li>
-          {typeof result.transcriptLength === "number" ? <li>Transcript length: {result.transcriptLength}</li> : null}
-          {result.extraction ? <li>Candidates: {result.extraction.created}</li> : null}
-          {result.extraction ? <li>Requires review: {result.extraction.requiresReview}</li> : null}
+          {result.sourceKind ? <li>Tipo de origen: <span className="code">{result.sourceKind}</span></li> : null}
+          <li>Reunión: <span className="code">{result.meetingId}</span></li>
+          <li>Transcripción: <span className="code">{result.transcriptId}</span></li>
+          {typeof result.transcriptLength === "number" ? <li>Longitud de transcripción: {result.transcriptLength}</li> : null}
+          {result.extraction ? <li>Candidatos: {result.extraction.created}</li> : null}
+          {result.extraction ? <li>Requieren revisión: {result.extraction.requiresReview}</li> : null}
         </ul>
       ) : null}
     </div>

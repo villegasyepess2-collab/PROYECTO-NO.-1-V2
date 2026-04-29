@@ -37,15 +37,15 @@ export default function MeetingsPage() {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        meetingTitle: "Teams Weekly Operations Demo",
+        meetingTitle: "Demo semanal de operaciones en Teams",
         transcriptText:
-          "I ask Ana to finalize the weekly report by next Tuesday, and please take care of confirming the blockers list."
+          "Le pido a Ana finalizar el informe semanal para el próximo martes y confirmar la lista de bloqueos."
       })
     });
     const payload = await response.json();
 
     if (!response.ok) {
-      setTeamsError(payload.detail ?? payload.error ?? "Unable to load Teams demo transcript");
+      setTeamsError(payload.detail ?? payload.error ?? "No se pudo cargar la transcripción demo de Teams");
       setSeedPending(false);
       return;
     }
@@ -77,7 +77,7 @@ export default function MeetingsPage() {
     const body = await response.json();
 
     if (!response.ok) {
-      setTeamsError(body.detail ?? body.error ?? "Ingestion failed");
+      setTeamsError(body.detail ?? body.error ?? "La carga de transcripción falló");
       setPending(false);
       return;
     }
@@ -89,49 +89,49 @@ export default function MeetingsPage() {
   return (
     <section>
       <div className="card">
-        <h3>Teams Transcript Demo (Fase 2)</h3>
-        <p>Primero carga un transcript Teams demo local (sin Teams real, sin Graph, sin IDs reales).</p>
+        <h3>Demo de transcripción de Teams (Fase 2)</h3>
+        <p>Primero carga una transcripción demo de Teams en local (sin Teams real, sin Graph, sin IDs reales).</p>
         <button onClick={loadTeamsDemoTranscript} disabled={seedPending}>
-          {seedPending ? "Loading Teams demo..." : "Load Teams demo transcript"}
+          {seedPending ? "Cargando demo de Teams..." : "Cargar transcripción demo de Teams"}
         </button>
         {teamsDemoResult ? (
           <ul>
-            <li>Source kind: <span className="code">{teamsDemoResult.sourceKind}</span></li>
-            <li>Meeting: <span className="code">{teamsDemoResult.meetingId}</span></li>
-            <li>Transcript: <span className="code">{teamsDemoResult.transcriptId}</span></li>
-            <li>Meeting external: <span className="code">{teamsDemoResult.meetingExternalId}</span></li>
-            <li>Transcript external: <span className="code">{teamsDemoResult.transcriptExternalId}</span></li>
-            <li>Transcript length: {teamsDemoResult.transcriptLength}</li>
+            <li>Tipo de origen: <span className="code">{teamsDemoResult.sourceKind}</span></li>
+            <li>Reunión: <span className="code">{teamsDemoResult.meetingId}</span></li>
+            <li>Transcripción: <span className="code">{teamsDemoResult.transcriptId}</span></li>
+            <li>Reunión externa: <span className="code">{teamsDemoResult.meetingExternalId}</span></li>
+            <li>Transcripción externa: <span className="code">{teamsDemoResult.transcriptExternalId}</span></li>
+            <li>Longitud de transcripción: {teamsDemoResult.transcriptLength}</li>
           </ul>
         ) : null}
 
-        <h4 style={{ marginTop: 16 }}>Advanced: manual Teams ingestion payload</h4>
+        <h4 style={{ marginTop: 16 }}>Avanzado: carga manual de payload de Teams</h4>
         <form onSubmit={onTeamsSubmit} style={{ display: "grid", gap: 8, marginTop: 12 }}>
-          <label htmlFor="meetingExternalId">Meeting external ID</label>
+          <label htmlFor="meetingExternalId">ID externo de la reunión</label>
           <input id="meetingExternalId" name="meetingExternalId" defaultValue="demo-meeting-external-001" required />
 
-          <label htmlFor="organizerAadUserId">Organizer AAD user ID</label>
+          <label htmlFor="organizerAadUserId">ID AAD del organizador</label>
           <input id="organizerAadUserId" name="organizerAadUserId" defaultValue="demo-organizer-aad-001" required />
 
-          <label htmlFor="transcriptExternalId">Transcript external ID</label>
+          <label htmlFor="transcriptExternalId">ID externo de la transcripción</label>
           <input id="transcriptExternalId" name="transcriptExternalId" defaultValue="demo-transcript-ext-001" required />
 
-          <label htmlFor="meetingTitle">Meeting title (optional)</label>
+          <label htmlFor="meetingTitle">Título de la reunión (opcional)</label>
           <input id="meetingTitle" name="meetingTitle" />
 
-          <label htmlFor="transcriptContent">Transcript text override (optional)</label>
+          <label htmlFor="transcriptContent">Texto de transcripción personalizado (opcional)</label>
           <textarea id="transcriptContent" name="transcriptContent" rows={5} />
 
-          <button type="submit" disabled={pending}>{pending ? "Ingesting..." : "Ingest transcript"}</button>
+          <button type="submit" disabled={pending}>{pending ? "Cargando..." : "Cargar transcripción"}</button>
         </form>
 
         {teamsError ? <p style={{ color: "#b91c1c" }}>{teamsError}</p> : null}
         {teamsResult ? (
           <ul>
-            <li>Meeting source: <span className="code">{teamsResult.meetingSourceId}</span></li>
-            <li>Meeting: <span className="code">{teamsResult.meetingId}</span></li>
-            <li>Transcript: <span className="code">{teamsResult.transcriptId}</span></li>
-            <li>Normalized chars: {teamsResult.normalizedLength}</li>
+            <li>Origen de reunión: <span className="code">{teamsResult.meetingSourceId}</span></li>
+            <li>Reunión: <span className="code">{teamsResult.meetingId}</span></li>
+            <li>Transcripción: <span className="code">{teamsResult.transcriptId}</span></li>
+            <li>Caracteres normalizados: {teamsResult.normalizedLength}</li>
           </ul>
         ) : null}
       </div>
